@@ -5,10 +5,12 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,12 +21,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -76,20 +76,21 @@ fun QuizScreen(viewModel: QuizViewModel) {
     val selectedAnswers = remember {
         mutableStateOf<List<String?>>(List(questions.size) { null })
     }
-    val quizSubmitted = remember { mutableStateOf(0) }
+    val quizSubmitted = remember { mutableStateOf(false) }
     val context = LocalContext.current
+
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
-                .align(Alignment.End)
+                .padding(16.dp),
         ) {
 
 
@@ -105,41 +106,48 @@ fun QuizScreen(viewModel: QuizViewModel) {
             )
         }
 
-    }
-    if (quizSubmitted.value == 0) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
-        )
-    }
-    Spacer(modifier = Modifier.height(16.dp))
+        Box(){
+        Button(
+            onClick = {
+                val correctAnswers = questions.map { it.correctAnswer }
+                val userAnswers = selectedAnswers.value.filterNotNull()
+                val score = userAnswers.count { userAnswer ->
+                    correctAnswers.any { it == userAnswer }
+                }
 
-    Button(
-        onClick = {
-            val correctAnswers = questions.map { it.correctAnswer }
-            val userAnswers = selectedAnswers.value.filterNotNull()
-            val score = userAnswers.count { userAnswer ->
-                correctAnswers.any { it == userAnswer }
+                Toast.makeText(
+                    context,
+                    "Your score: $score/${questions.size}",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+
+                if (currentQuestionIndex.value < questions.lastIndex) {
+                    currentQuestionIndex.value++
+                } else {
+                    currentQuestionIndex.value = 0
+                }
+
+                quizSubmitted.value = false
+
             }
-
-            Toast.makeText(context, "Your score: $score/${questions.size}", Toast.LENGTH_SHORT)
-                .show()
-
-            if (currentQuestionIndex.value < questions.lastIndex) {
-                currentQuestionIndex.value++
-            } else {
-                currentQuestionIndex.value = 0
-            }
-
-
-            quizSubmitted.value = 0
-
+        ) {
+            Text(text = if (currentQuestionIndex.value < questions.lastIndex) "Next Question" else "Restart Quiz")
         }
-    ) {
-        Text(text = if (currentQuestionIndex.value < questions.lastIndex) "Next Question" else "Restart Quiz")
     }
+    }
+//    if (!quizSubmitted.value) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
+//        )
+//    }
+
+
+
 }
+
 
 @Composable
 fun QuestionCard(question: Question, selectedAnswer: String?, onAnswerSelected: (String) -> Unit) {
@@ -157,7 +165,7 @@ fun QuestionCard(question: Question, selectedAnswer: String?, onAnswerSelected: 
 
             question.options.forEach { option ->
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
@@ -167,12 +175,16 @@ fun QuestionCard(question: Question, selectedAnswer: String?, onAnswerSelected: 
                         onClick = {
                             onAnswerSelected(option)
                         },
-                        modifier = Modifier.weight(1f)
-                    )
+
+                        )
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    Text(option)
+                    Text(
+                        option,
+                        modifier = Modifier
+                            .padding(10.dp)
+                    )
                 }
             }
         }
@@ -183,7 +195,5 @@ fun QuestionCard(question: Question, selectedAnswer: String?, onAnswerSelected: 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    QuizApplicationTheme {
-        QuizScreen(QuizViewModel())
-    }
+    QuizScreen(QuizViewModel())
 }
