@@ -78,6 +78,11 @@ fun QuizScreen(viewModel: QuizViewModel) {
     }
     val quizSubmitted = remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val correctAnswers = questions.map { it.correctAnswer }
+    val userAnswers = selectedAnswers.value.filterNotNull()
+    val score = userAnswers.count { userAnswer ->
+        correctAnswers.any { it == userAnswer }
+    }
 
 
     Column(
@@ -106,35 +111,36 @@ fun QuizScreen(viewModel: QuizViewModel) {
             )
         }
 
-        Box(){
-        Button(
-            onClick = {
-                val correctAnswers = questions.map { it.correctAnswer }
-                val userAnswers = selectedAnswers.value.filterNotNull()
-                val score = userAnswers.count { userAnswer ->
-                    correctAnswers.any { it == userAnswer }
+        Box() {
+            Button(
+                onClick = {
+
+//                    Toast.makeText(
+//                        context,
+//                        "Your score: $score/${questions.size}",
+//                        Toast.LENGTH_SHORT
+//                    )
+//                        .show()
+
+                    if (currentQuestionIndex.value < questions.lastIndex) {
+                        currentQuestionIndex.value++
+                        Toast.makeText(context, "Correct answer.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        currentQuestionIndex.value = 0
+                        Toast.makeText(context, "Wrong answer.", Toast.LENGTH_SHORT).show()
+                    }
+
+                    quizSubmitted.value = false
+
                 }
-
-                Toast.makeText(
-                    context,
-                    "Your score: $score/${questions.size}",
-                    Toast.LENGTH_SHORT
-                )
-                    .show()
-
-                if (currentQuestionIndex.value < questions.lastIndex) {
-                    currentQuestionIndex.value++
-                } else {
-                    currentQuestionIndex.value = 0
-                }
-
-                quizSubmitted.value = false
-
+            ) {
+                Text(text = if (currentQuestionIndex.value < questions.lastIndex) "Next Question" else "Restart Quiz")
             }
-        ) {
-            Text(text = if (currentQuestionIndex.value < questions.lastIndex) "Next Question" else "Restart Quiz")
         }
-    }
+
+        Box(){
+            Text(text = "Score: $score/${questions.size}")
+        }
     }
 //    if (!quizSubmitted.value) {
 //        Box(
@@ -143,9 +149,6 @@ fun QuizScreen(viewModel: QuizViewModel) {
 //                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
 //        )
 //    }
-
-
-
 }
 
 
