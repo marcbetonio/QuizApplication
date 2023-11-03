@@ -101,16 +101,11 @@ fun QuizScreen(viewModel: QuizViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
         ) {
-
-
-            val currentQuestion = questions[currentQuestionIndex.value]
-
             QuestionCard(question = currentQuestion,
                 selectedAnswer = selectedAnswers.value[currentQuestionIndex.value],
                 onAnswerSelected = { answer ->
