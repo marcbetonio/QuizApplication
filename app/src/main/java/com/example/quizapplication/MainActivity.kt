@@ -1,6 +1,8 @@
 package com.example.quizapplication
 
 import android.os.Bundle
+import android.widget.Button
+import android.widget.RadioGroup
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,8 +25,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -76,13 +80,19 @@ fun QuizScreen(viewModel: QuizViewModel) {
     val selectedAnswers = remember {
         mutableStateOf<List<String?>>(List(questions.size) { null })
     }
-    val quizSubmitted = remember { mutableStateOf(false) }
+//    val quizSubmitted = remember { mutableStateOf(false) }
     val context = LocalContext.current
     val correctAnswers = questions.map { it.correctAnswer }
     val userAnswers = selectedAnswers.value.filterNotNull()
     val score = userAnswers.count { userAnswer ->
         correctAnswers.any { it == userAnswer }
     }
+    val currentQuestion = questions[currentQuestionIndex.value]
+    val isCorrect =
+        selectedAnswers.value[currentQuestionIndex.value] == currentQuestion.correctAnswer
+    var showScore by remember { mutableStateOf(false) }
+    var showRestartButton by remember { mutableStateOf(false) }
+
 
 
     Column(
@@ -114,41 +124,54 @@ fun QuizScreen(viewModel: QuizViewModel) {
         Box() {
             Button(
                 onClick = {
-
-//                    Toast.makeText(
-//                        context,
-//                        "Your score: $score/${questions.size}",
-//                        Toast.LENGTH_SHORT
-//                    )
-//                        .show()
-
                     if (currentQuestionIndex.value < questions.lastIndex) {
                         currentQuestionIndex.value++
-                        Toast.makeText(context, "Correct answer.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            if (isCorrect) "Correct answer." else "Wrong answer.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        currentQuestionIndex.value = 0
-                        Toast.makeText(context, "Wrong answer.", Toast.LENGTH_SHORT).show()
+                        showScore = true
+                        showRestartButton = true
                     }
-
-                    quizSubmitted.value = false
-
                 }
             ) {
-                Text(text = if (currentQuestionIndex.value < questions.lastIndex) "Next Question" else "Restart Quiz")
+                Text(text = if (currentQuestionIndex.value < questions.lastIndex) "Next Question" else "Submit and View Score")
             }
         }
 
-        Box(){
-            Text(text = "Score: $score/${questions.size}")
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Box() {
+                if (showScore) {
+                    Text(
+                        text = "Total Score: $score/${questions.size}",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+            Box() {
+                if (showRestartButton) {
+                    Button(
+                        onClick = {
+                            selectedAnswers.value = List(questions.size) { null }
+                            currentQuestionIndex.value = 0
+                            showScore = false
+                            showRestartButton = false
+                            //quizSubmitted.value = false
+                            Toast.makeText(context, "Quiz Restarted", Toast.LENGTH_SHORT).show()
+                        },
+                        enabled = showRestartButton
+                    ) {
+                        Text(text = "Restart Quiz")
+                    }
+                }
+            }
         }
     }
-//    if (!quizSubmitted.value) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
-//        )
-//    }
 }
 
 
@@ -177,9 +200,7 @@ fun QuestionCard(question: Question, selectedAnswer: String?, onAnswerSelected: 
                         selected = selectedAnswer == option,
                         onClick = {
                             onAnswerSelected(option)
-                        },
-
-                        )
+                        })
 
                     Spacer(modifier = Modifier.width(8.dp))
 
