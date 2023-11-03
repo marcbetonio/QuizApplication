@@ -156,7 +156,6 @@ fun QuizScreen(viewModel: QuizViewModel) {
                             currentQuestionIndex.value = 0
                             showScore = false
                             showRestartButton = false
-                            //quizSubmitted.value = false
                             Toast.makeText(context, "Quiz Restarted", Toast.LENGTH_SHORT).show()
                         },
                         enabled = showRestartButton
